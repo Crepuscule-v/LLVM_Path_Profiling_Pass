@@ -1,1 +1,1 @@
-# LLVM_Path_Profiling_Pass
+# A llvm pass for path profiling.

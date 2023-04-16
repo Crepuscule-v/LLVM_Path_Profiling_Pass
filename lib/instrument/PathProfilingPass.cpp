@@ -19,8 +19,8 @@ using namespace llvm;
 typedef struct Edge {
     BasicBlock* src;
     BasicBlock* dst;
-    int val;
-    int inc;
+    int val;                    // 32 bit 
+    int inc;                    // 32 bit
     bool isInSpanningTree;
     bool isBackedge;
     bool isSelfLoop;
@@ -57,8 +57,13 @@ namespace {
             void calculate_val_for_edges();
             void select_spanning_tree();
             void calculate_inc_for_chords();
-            bool inc_dfs(Edges, Node, Node, Node, int &) 
+            bool inc_dfs(Edges, Node, Node, Node, int &);
+            Node find_ufs(Node, std::unordered_map<Node, Node>);
+            void instrument();
+            Nodes topological_sort();
 
+
+        // TODO: 有大问题, 不能将他们设计成 module 内部成员变量
         private:
             Node entry_node, exit_node;
             Edges edges_vec;
@@ -66,6 +71,7 @@ namespace {
             Nodes nodes_vec;
             std::unordered_map<Node, int> num_paths_map;        // record numpaths for each node
             Edges spanning_tree_vec;
+            Function* counter_init_func;
     };
 }
 
@@ -169,7 +175,7 @@ void PathProfilingPass::update_edges_vec_with_backedge_info() {
     }
 }
 
-std::vector<Node> PathProfilingPass::topological_sort() {
+Nodes PathProfilingPass::topological_sort() {
     std::vector<Node> sorted_nodes_vec;         // in positive order
     std::unordered_map<Node, int> in_degree_map;
     std::queue<Node> q;
@@ -217,7 +223,7 @@ void PathProfilingPass::calculate_val_for_edges() {
     }
 }
 
-Node find_ufs(Node node, std::unordered_map<Node, Node> father) {
+Node PathProfilingPass::find_ufs(Node node, std::unordered_map<Node, Node> father) {
     if (father[node] != node) father[node] = find_ufs(father[node]);
     return father[node];
 }
@@ -296,6 +302,95 @@ void PathProfilingPass::calculate_inc_for_chords() {
     return;
 }
 
+std::pair<Value*, Value*> PathProfilingPass::instr_before_entry(Function *F, Module *M, BasicBlock* entry) {
+    // Allocate memory and init
+    auto func_counter_name = "_" + F -> getName() + "_" + "counter_array";
+    auto &context = F -> getContext();
+    PointerType* ptr_type_int8 = PointerType::get(Type::getInt8Ty(context), 0);
+    Constant* null_ptr = ConstantPointerNull::get(ptr_type_int8);
+    // A generic pointer, will be assigned with a void*
+    GlobalVariable* func_counter_ptr = new GlobalVariable (*M, ptr_type_int8, false, GlobalValue::PrivateLinkage, 0, func_counter_name);
+    func_counter_ptr -> setAlignment(8);
+    func_counter_ptr -> setInitializer(null_ptr);
+
+    BasicBlock* judge_basicblock = BasicBlock::Create(context, "block_judge", F)    // judge if we need to init 
+    BasicBlock* init_counter_basicblock = BasicBlock::Create(context, "block_init", F);
+
+    IRBuilder<> judge_builder(judge_basicblock);
+    IRBuilder<> init_counter_builder(init_counter_basicblock);
+
+    // Create a local variable 'r' before entry the function which store the path values
+    Value* r_ptr = judge_builder.CreateAlloca(Type::getInt32Ty(context));
+    // initialize 'r' with 0
+    Value* zero32 = ConstantInt::get(Type::getInt32Ty(context), 0, false);
+    Value* zero64 = ConstantInt::get(Type::getInt64Ty(context), 0, false);
+    judge_builder.CreateStore(zero32, r_ptr);     
+
+    // judge if the global counter has been initialized 
+    auto counter_ptr_val = judge_builder.CreateLoad(prt_type, func_counter_ptr);
+    auto cmp_res = judge_builder.CreatePtrDiff(counter_ptr_val, null_ptr);
+    auto flag = judge_builder.CreateICmpEQ(cmp_res, zero64);                    // return true if equal
+    judge_builder.CreateCondBr(flag, init_counter_basicblock, entry);
+
+    // call counter_init_func from runtime
+    std::vector<Value *> args;
+    Value* counter_entry_num_ptr = ConstantInt::get(Type::getInt32Ty(context), counter_size, false);
+    auto func_name = init_counter_builder.CreateGlobalString(F -> getName());
+    Value* func_name_ptr = init_counter_builder.CreatePointerCast(func_name, ptr_type_int8);
+    args.push_back(counter_entry_num_ptr);
+    args.push_back(func_name_ptr);
+    Value* counter_addr = init_counter_builder.CreateCall(counter_init_func, args);     // start addr of counter global array
+    init_counter_builder.CreateStore(counter_addr, func_counter_ptr);
+    init_counter_builder.CreateBr(entry);
+
+    // return {r_ptr, func_counter_ptr)
+    return {r_ptr, func_counter_ptr};
+}
+
+void PathProfilingPass::instr_for_edges(Function *F, Value *r_ptr, Value *counter_ptr) {
+    for (auto edge : edges_vec) {
+        if (!edge.isInSpanningTree && !edge.isDummyedge && edge -> inc != 0) {
+            // instrument for normal edges
+            auto src = edge -> src;
+            auto dst = edge -> dst;
+            auto &context = F -> getContext();
+            BasicBlock* inc_update_bb = BasicBlock::Create(context, "", F, dst);        // llvm will generete a unique name for bb if we use ""
+            IRBuilder<> inc_upd_builder(inc_update_bb);
+            Value* r = inc_upd_builder.CreateLoad(r_ptr);
+            Value* inc_val = ConstantInt::get(Type::getInt32Ty(context), edge -> inc, false);
+            Value* res = inc_upd_builder.CreateAdd(r, inc_val);
+            inc_upd_builder.CreateStore(res, r_ptr);
+            inc_upd_builder.CreateBr(dst);
+
+            // change the control flow of src block
+            auto terminator = src -> getTerminator();
+            for (int i = 0; i < terminator -> getNumSuccessors(); i ++) {
+                if (terminator -> getSuccessor(i) == dst) {
+                    terminator -> setSuccessor(i, inc_update_bb);
+                    setPhiNodes(dst, src, inc_update_bb);
+                    break;
+                }
+            }
+        }
+        else if (!edge.isInSpanningTree && edge.isDummyedge) {
+            // instrument for backedges
+            
+        }
+    }
+    return;
+}
+
+void PathProfilingPass::instrument(Function *F, Module *M) {
+    // init r_ptr && counter_ptr
+    std::pair<Value*, Value*> ptr_pair = instr_before_entry(F, M);
+
+    // update r
+    instr_for_edges(F, ptr_pair.first, ptr__pair.second);
+
+    // update counter
+    instr_at_exit(F, M);
+}
+
 void PathProfilingPass::processFunction(Function &F, Module &M) {
     // initialize 
     init_nodes(F);
@@ -319,21 +414,32 @@ void PathProfilingPass::processFunction(Function &F, Module &M) {
     // caluculate inc for each chord
     calculate_inc_for_chords();
 
-    // instrument
-
-
+    // instrument part
+    instrument(&F, &M);
+    
     return true;
 }
 
+void PathProfilingPass::init_rt_func(Module* M) {
+    auto context = M -> getContext();
+    // init counter_init_func
+    std::vector<Type*> arg_types{Type::getInt32Ty(context), Type::getInt8PtrTy(context)};
+    auto return_type = Type::getInt8PtrTy(context);
+    FunctionType *FT = FunctionType::get(return_type, arg_types, false);
+    counter_init_func = Function::Create(FT, Function::ExternalLinkage, "initCounter", M);
+}
+
 bool PathProfilingPass::runOnModule(Module &M) {
+    counter_init_func = NULL;
+    init_rt_func(&M);            // init runtime Function* 
     for (auto &F : M)
     {
         errs() << "Function " << F.getName() << "\n";
         processFunction(F, M);
+        errs() << "########## " << "\n";
     }
     return true;
 }
-
 
 char PathProfilingPass::ID = 0;
 static RegisterPass<PathProfilingPass> P("pathprofile", "A pass for path profiling");

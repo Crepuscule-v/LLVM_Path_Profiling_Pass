@@ -11,10 +11,11 @@ typedef struct func_node {
 func_node* start = nullptr;
 func_node* end = nullptr;
 
-void updateCounter(func_node *entry, int idx) {
-    entry -> counter[idx] ++;
+void updateCounter(func_node *node, int idx) {
+    node -> counter[idx] ++;
 }
 
+// TODO: implement continuous mode & replace it by allocating memory for global array in IR
 void* initCounter(int size, char *func_name) {
     func_node* node = new func_node;
     __uint64_t* counter = new __uint64_t [size] ();         // initialize with 0

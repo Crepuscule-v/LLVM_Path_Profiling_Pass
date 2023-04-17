@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/fuzz/Desktop/LLVM_path_profiling_pass/lib/runtime/runtime_function.cpp
+cstdio
+-
+cstring
+-
+

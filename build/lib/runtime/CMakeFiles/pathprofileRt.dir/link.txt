@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpathprofileRt.a  CMakeFiles/pathprofileRt.dir/runtime_function.cpp.o
+/usr/bin/ranlib libpathprofileRt.a

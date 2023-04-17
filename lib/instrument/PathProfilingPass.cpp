@@ -543,7 +543,8 @@ bool PathProfilingPass::runOnModule(Module &M) {
         errs() << "----------\n\n" << "\n";
     }
 
-    // Save the instrumented IR to a file before verification
+    // Save the instrumented IR to a file before verification, just for debugging
+    /*
     std::error_code EC;
     llvm::raw_fd_ostream IRFile("instrumented_ir.ll", EC);
     if (!EC) {
@@ -552,6 +553,7 @@ bool PathProfilingPass::runOnModule(Module &M) {
     } else {
         errs() << "Error opening output file: " << EC.message() << "\n";
     }
+    */
 
     return true;
 }

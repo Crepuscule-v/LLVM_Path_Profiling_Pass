@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /home/fuzz/Desktop/LLVM_path_profiling_pass/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target rebuild_cache
-rebuild_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : rebuild_cache
-
-# Special rule for the target rebuild_cache
-rebuild_cache/fast: rebuild_cache
-
-.PHONY : rebuild_cache/fast
-
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
@@ -77,6 +66,17 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target rebuild_cache
+rebuild_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
+	/usr/bin/cmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : rebuild_cache
+
+# Special rule for the target rebuild_cache
+rebuild_cache/fast: rebuild_cache
+
+.PHONY : rebuild_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -111,19 +111,19 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-lib/runtime/CMakeFiles/pathprofileRt.dir/rule:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f CMakeFiles/Makefile2 lib/runtime/CMakeFiles/pathprofileRt.dir/rule
-.PHONY : lib/runtime/CMakeFiles/pathprofileRt.dir/rule
+lib/runtime/CMakeFiles/pathProfileRt.dir/rule:
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f CMakeFiles/Makefile2 lib/runtime/CMakeFiles/pathProfileRt.dir/rule
+.PHONY : lib/runtime/CMakeFiles/pathProfileRt.dir/rule
 
 # Convenience name for target.
-pathprofileRt: lib/runtime/CMakeFiles/pathprofileRt.dir/rule
+pathProfileRt: lib/runtime/CMakeFiles/pathProfileRt.dir/rule
 
-.PHONY : pathprofileRt
+.PHONY : pathProfileRt
 
 # fast build rule for target.
-pathprofileRt/fast:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/build
-.PHONY : pathprofileRt/fast
+pathProfileRt/fast:
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/build
+.PHONY : pathProfileRt/fast
 
 runtime_function.o: runtime_function.cpp.o
 
@@ -131,7 +131,7 @@ runtime_function.o: runtime_function.cpp.o
 
 # target to build an object file
 runtime_function.cpp.o:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/runtime_function.cpp.o
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/runtime_function.cpp.o
 .PHONY : runtime_function.cpp.o
 
 runtime_function.i: runtime_function.cpp.i
@@ -140,7 +140,7 @@ runtime_function.i: runtime_function.cpp.i
 
 # target to preprocess a source file
 runtime_function.cpp.i:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/runtime_function.cpp.i
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/runtime_function.cpp.i
 .PHONY : runtime_function.cpp.i
 
 runtime_function.s: runtime_function.cpp.s
@@ -149,7 +149,7 @@ runtime_function.s: runtime_function.cpp.s
 
 # target to generate assembly for a file
 runtime_function.cpp.s:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/runtime_function.cpp.s
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/runtime_function.cpp.s
 .PHONY : runtime_function.cpp.s
 
 # Help Target
@@ -158,9 +158,9 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... pathprofileRt"
+	@echo "... rebuild_cache"
+	@echo "... pathProfileRt"
 	@echo "... runtime_function.o"
 	@echo "... runtime_function.i"
 	@echo "... runtime_function.s"

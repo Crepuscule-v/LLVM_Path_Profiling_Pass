@@ -95,7 +95,7 @@ lib/clean: lib/runtime/clean
 # Directory level rules for directory lib/instrument
 
 # Recursive "all" directory target.
-lib/instrument/all: lib/instrument/CMakeFiles/pathprofilePass.dir/all
+lib/instrument/all: lib/instrument/CMakeFiles/pathProfilePass.dir/all
 
 .PHONY : lib/instrument/all
 
@@ -105,7 +105,7 @@ lib/instrument/preinstall:
 .PHONY : lib/instrument/preinstall
 
 # Recursive "clean" directory target.
-lib/instrument/clean: lib/instrument/CMakeFiles/pathprofilePass.dir/clean
+lib/instrument/clean: lib/instrument/CMakeFiles/pathProfilePass.dir/clean
 
 .PHONY : lib/instrument/clean
 
@@ -113,7 +113,7 @@ lib/instrument/clean: lib/instrument/CMakeFiles/pathprofilePass.dir/clean
 # Directory level rules for directory lib/runtime
 
 # Recursive "all" directory target.
-lib/runtime/all: lib/runtime/CMakeFiles/pathprofileRt.dir/all
+lib/runtime/all: lib/runtime/CMakeFiles/pathProfileRt.dir/all
 
 .PHONY : lib/runtime/all
 
@@ -123,7 +123,7 @@ lib/runtime/preinstall:
 .PHONY : lib/runtime/preinstall
 
 # Recursive "clean" directory target.
-lib/runtime/clean: lib/runtime/CMakeFiles/pathprofileRt.dir/clean
+lib/runtime/clean: lib/runtime/CMakeFiles/pathProfileRt.dir/clean
 
 .PHONY : lib/runtime/clean
 
@@ -209,58 +209,58 @@ CMakeFiles/intrinsics_gen.dir/clean:
 .PHONY : CMakeFiles/intrinsics_gen.dir/clean
 
 #=============================================================================
-# Target rules for target lib/instrument/CMakeFiles/pathprofilePass.dir
+# Target rules for target lib/instrument/CMakeFiles/pathProfilePass.dir
 
 # All Build rule for target.
-lib/instrument/CMakeFiles/pathprofilePass.dir/all:
-	$(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/depend
-	$(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles --progress-num=1,2 "Built target pathprofilePass"
-.PHONY : lib/instrument/CMakeFiles/pathprofilePass.dir/all
+lib/instrument/CMakeFiles/pathProfilePass.dir/all:
+	$(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/depend
+	$(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles --progress-num=1,2 "Built target pathProfilePass"
+.PHONY : lib/instrument/CMakeFiles/pathProfilePass.dir/all
 
 # Build rule for subdir invocation for target.
-lib/instrument/CMakeFiles/pathprofilePass.dir/rule: cmake_check_build_system
+lib/instrument/CMakeFiles/pathProfilePass.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles 2
-	$(MAKE) -f CMakeFiles/Makefile2 lib/instrument/CMakeFiles/pathprofilePass.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 lib/instrument/CMakeFiles/pathProfilePass.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles 0
-.PHONY : lib/instrument/CMakeFiles/pathprofilePass.dir/rule
+.PHONY : lib/instrument/CMakeFiles/pathProfilePass.dir/rule
 
 # Convenience name for target.
-pathprofilePass: lib/instrument/CMakeFiles/pathprofilePass.dir/rule
+pathProfilePass: lib/instrument/CMakeFiles/pathProfilePass.dir/rule
 
-.PHONY : pathprofilePass
+.PHONY : pathProfilePass
 
 # clean rule for target.
-lib/instrument/CMakeFiles/pathprofilePass.dir/clean:
-	$(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/clean
-.PHONY : lib/instrument/CMakeFiles/pathprofilePass.dir/clean
+lib/instrument/CMakeFiles/pathProfilePass.dir/clean:
+	$(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/clean
+.PHONY : lib/instrument/CMakeFiles/pathProfilePass.dir/clean
 
 #=============================================================================
-# Target rules for target lib/runtime/CMakeFiles/pathprofileRt.dir
+# Target rules for target lib/runtime/CMakeFiles/pathProfileRt.dir
 
 # All Build rule for target.
-lib/runtime/CMakeFiles/pathprofileRt.dir/all:
-	$(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/depend
-	$(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles --progress-num=3,4 "Built target pathprofileRt"
-.PHONY : lib/runtime/CMakeFiles/pathprofileRt.dir/all
+lib/runtime/CMakeFiles/pathProfileRt.dir/all:
+	$(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/depend
+	$(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles --progress-num=3,4 "Built target pathProfileRt"
+.PHONY : lib/runtime/CMakeFiles/pathProfileRt.dir/all
 
 # Build rule for subdir invocation for target.
-lib/runtime/CMakeFiles/pathprofileRt.dir/rule: cmake_check_build_system
+lib/runtime/CMakeFiles/pathProfileRt.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles 2
-	$(MAKE) -f CMakeFiles/Makefile2 lib/runtime/CMakeFiles/pathprofileRt.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 lib/runtime/CMakeFiles/pathProfileRt.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/fuzz/Desktop/LLVM_path_profiling_pass/build/CMakeFiles 0
-.PHONY : lib/runtime/CMakeFiles/pathprofileRt.dir/rule
+.PHONY : lib/runtime/CMakeFiles/pathProfileRt.dir/rule
 
 # Convenience name for target.
-pathprofileRt: lib/runtime/CMakeFiles/pathprofileRt.dir/rule
+pathProfileRt: lib/runtime/CMakeFiles/pathProfileRt.dir/rule
 
-.PHONY : pathprofileRt
+.PHONY : pathProfileRt
 
 # clean rule for target.
-lib/runtime/CMakeFiles/pathprofileRt.dir/clean:
-	$(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/clean
-.PHONY : lib/runtime/CMakeFiles/pathprofileRt.dir/clean
+lib/runtime/CMakeFiles/pathProfileRt.dir/clean:
+	$(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/clean
+.PHONY : lib/runtime/CMakeFiles/pathProfileRt.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

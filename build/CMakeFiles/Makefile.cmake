@@ -140,6 +140,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/acc_gen.dir/DependInfo.cmake"
   "CMakeFiles/omp_gen.dir/DependInfo.cmake"
   "CMakeFiles/intrinsics_gen.dir/DependInfo.cmake"
-  "lib/instrument/CMakeFiles/pathprofilePass.dir/DependInfo.cmake"
-  "lib/runtime/CMakeFiles/pathprofileRt.dir/DependInfo.cmake"
+  "lib/instrument/CMakeFiles/pathProfilePass.dir/DependInfo.cmake"
+  "lib/runtime/CMakeFiles/pathProfileRt.dir/DependInfo.cmake"
   )

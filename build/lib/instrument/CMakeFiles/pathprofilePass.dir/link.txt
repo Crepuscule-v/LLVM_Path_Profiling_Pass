@@ -1,2 +1,0 @@
-/usr/bin/ar qc libpathprofilePass.a  CMakeFiles/pathprofilePass.dir/PathProfilingPass.cpp.o
-/usr/bin/ranlib libpathprofilePass.a

@@ -150,30 +150,30 @@ intrinsics_gen/fast:
 .PHONY : intrinsics_gen/fast
 
 #=============================================================================
-# Target rules for targets named pathprofilePass
+# Target rules for targets named pathProfilePass
 
 # Build rule for target.
-pathprofilePass: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 pathprofilePass
-.PHONY : pathprofilePass
+pathProfilePass: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 pathProfilePass
+.PHONY : pathProfilePass
 
 # fast build rule for target.
-pathprofilePass/fast:
-	$(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/build
-.PHONY : pathprofilePass/fast
+pathProfilePass/fast:
+	$(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/build
+.PHONY : pathProfilePass/fast
 
 #=============================================================================
-# Target rules for targets named pathprofileRt
+# Target rules for targets named pathProfileRt
 
 # Build rule for target.
-pathprofileRt: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 pathprofileRt
-.PHONY : pathprofileRt
+pathProfileRt: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 pathProfileRt
+.PHONY : pathProfileRt
 
 # fast build rule for target.
-pathprofileRt/fast:
-	$(MAKE) -f lib/runtime/CMakeFiles/pathprofileRt.dir/build.make lib/runtime/CMakeFiles/pathprofileRt.dir/build
-.PHONY : pathprofileRt/fast
+pathProfileRt/fast:
+	$(MAKE) -f lib/runtime/CMakeFiles/pathProfileRt.dir/build.make lib/runtime/CMakeFiles/pathProfileRt.dir/build
+.PHONY : pathProfileRt/fast
 
 # Help Target
 help:
@@ -186,8 +186,8 @@ help:
 	@echo "... edit_cache"
 	@echo "... omp_gen"
 	@echo "... intrinsics_gen"
-	@echo "... pathprofilePass"
-	@echo "... pathprofileRt"
+	@echo "... pathProfilePass"
+	@echo "... pathProfileRt"
 .PHONY : help
 
 

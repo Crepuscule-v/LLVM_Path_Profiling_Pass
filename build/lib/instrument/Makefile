@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /home/fuzz/Desktop/LLVM_path_profiling_pass/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
-
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -77,6 +66,17 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
+
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -111,19 +111,19 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-lib/instrument/CMakeFiles/pathprofilePass.dir/rule:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f CMakeFiles/Makefile2 lib/instrument/CMakeFiles/pathprofilePass.dir/rule
-.PHONY : lib/instrument/CMakeFiles/pathprofilePass.dir/rule
+lib/instrument/CMakeFiles/pathProfilePass.dir/rule:
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f CMakeFiles/Makefile2 lib/instrument/CMakeFiles/pathProfilePass.dir/rule
+.PHONY : lib/instrument/CMakeFiles/pathProfilePass.dir/rule
 
 # Convenience name for target.
-pathprofilePass: lib/instrument/CMakeFiles/pathprofilePass.dir/rule
+pathProfilePass: lib/instrument/CMakeFiles/pathProfilePass.dir/rule
 
-.PHONY : pathprofilePass
+.PHONY : pathProfilePass
 
 # fast build rule for target.
-pathprofilePass/fast:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/build
-.PHONY : pathprofilePass/fast
+pathProfilePass/fast:
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/build
+.PHONY : pathProfilePass/fast
 
 PathProfilingPass.o: PathProfilingPass.cpp.o
 
@@ -131,7 +131,7 @@ PathProfilingPass.o: PathProfilingPass.cpp.o
 
 # target to build an object file
 PathProfilingPass.cpp.o:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/PathProfilingPass.cpp.o
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/PathProfilingPass.cpp.o
 .PHONY : PathProfilingPass.cpp.o
 
 PathProfilingPass.i: PathProfilingPass.cpp.i
@@ -140,7 +140,7 @@ PathProfilingPass.i: PathProfilingPass.cpp.i
 
 # target to preprocess a source file
 PathProfilingPass.cpp.i:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/PathProfilingPass.cpp.i
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/PathProfilingPass.cpp.i
 .PHONY : PathProfilingPass.cpp.i
 
 PathProfilingPass.s: PathProfilingPass.cpp.s
@@ -149,7 +149,7 @@ PathProfilingPass.s: PathProfilingPass.cpp.s
 
 # target to generate assembly for a file
 PathProfilingPass.cpp.s:
-	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathprofilePass.dir/build.make lib/instrument/CMakeFiles/pathprofilePass.dir/PathProfilingPass.cpp.s
+	cd /home/fuzz/Desktop/LLVM_path_profiling_pass/build && $(MAKE) -f lib/instrument/CMakeFiles/pathProfilePass.dir/build.make lib/instrument/CMakeFiles/pathProfilePass.dir/PathProfilingPass.cpp.s
 .PHONY : PathProfilingPass.cpp.s
 
 # Help Target
@@ -158,9 +158,9 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... pathprofilePass"
+	@echo "... edit_cache"
+	@echo "... pathProfilePass"
 	@echo "... PathProfilingPass.o"
 	@echo "... PathProfilingPass.i"
 	@echo "... PathProfilingPass.s"

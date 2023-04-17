@@ -62,7 +62,7 @@ class PathProfilingPass : public ModulePass {
         void instr_for_edges(Function*, Module*, Value*, Value*, Edges, Node &, Node &);
         void instr_at_exit(Function*, Module*, Value*, Value*, Node &, Node &);
         Node find_ufs(Node, std::unordered_map<Node, Node>);
-        Nodes topological_sort(Edges, Node &);
+        Nodes topological_sort(Edges, Nodes &, Node &);
         Edges get_out_edges_vec(Node, Edges);
         void init_rt_func(Module*);
         std::pair<Value*, Value*> instr_before_entry(Function*, Module*, BasicBlock*, int);
@@ -174,7 +174,7 @@ void PathProfilingPass::update_edges_vec_with_backedge_info(Edges &edges_vec, st
     }
 }
 
-Nodes PathProfilingPass::topological_sort(Edges edges_vec, Node &entry_node) {
+Nodes PathProfilingPass::topological_sort(Edges edges_vec, Nodes &nodes_vec, Node &entry_node) {
     std::vector<Node> sorted_nodes_vec;         // in positive order
     std::unordered_map<Node, int> in_degree_map;
     std::queue<Node> q;
@@ -185,6 +185,10 @@ Nodes PathProfilingPass::topological_sort(Edges edges_vec, Node &entry_node) {
             in_degree_map.find(edge -> dst) == in_degree_map.end() ? in_degree_map[edge -> dst] = 1 : in_degree_map[edge -> dst] += 1;
         }
     }
+
+    // for (auto node : nodes_vec) {
+    //     errs() << node -> getName() << " indegree  " << in_degree_map[node] << "\n";
+    // }
 
     q.push(entry_node);
     while (!q.empty()) {
@@ -197,19 +201,30 @@ Nodes PathProfilingPass::topological_sort(Edges edges_vec, Node &entry_node) {
             if (in_degree_map[edge -> dst] == 0) q.push(edge -> dst);
         }
     }
+
+    for (auto node : sorted_nodes_vec) {
+        errs() << node -> getName() << " indegree  " << in_degree_map[node] << "\n";
+    }
+
+    for (int i = 0; i < sorted_nodes_vec.size(); i ++) {
+        errs() << sorted_nodes_vec[i] -> getName() << " indegree  " << in_degree_map[sorted_nodes_vec[i]] << "\n";
+    }
+
     return sorted_nodes_vec;
 }
 
 void PathProfilingPass::calculate_val_for_edges(Nodes &nodes_vec, Edges &edges_vec, std::unordered_map<Node, int> &num_paths_map, Node &entry_node, Node &exit_node) {
     // get topological order 
-    auto sorted_nodes_vec = topological_sort(edges_vec, entry_node);
+    auto sorted_nodes_vec = topological_sort(edges_vec, nodes_vec, entry_node);
     // cal val in a reverse order
     Edges tmp_edges_vec;
     for (auto edge : edges_vec) {
         if (edge -> isBackedge == false) tmp_edges_vec.push_back(edge);
     }
-    for (int i = sorted_nodes_vec.size() - 1; i --; i >= 0) {
+    errs() << "sorted_nodes_vec.size() : " << sorted_nodes_vec.size() << "\n";
+    for (int i = sorted_nodes_vec.size() - 1; i >= 0; i --) {
         auto curr_node = sorted_nodes_vec[i];
+        errs() << i << " : curr node " << curr_node -> getName() << "  exit node " << exit_node -> getName() << "\n";
         if (curr_node == exit_node) num_paths_map[curr_node] = 1;           // leaf node
         else {
             num_paths_map[curr_node] = 0;
@@ -417,14 +432,14 @@ void PathProfilingPass::instr_for_edges(Function *F, Module *M, Value *r_ptr, Va
             std::vector<Value *> args;
             Value* counter_addr = builder.CreateLoad(ptr_type_int8, counter_ptr);
             Value* idx = builder.CreateLoad(Type::getInt32Ty(context), r_ptr);
-            args.push_back(counter_addr);
             args.push_back(idx);
+            args.push_back(counter_addr);
 
             auto counter_update_func = M -> getOrInsertFunction(
                 "updateCounter",
                 Type::getVoidTy(context),
-                Type::getInt8PtrTy(context),
-                Type::getInt32Ty(context)
+                Type::getInt32Ty(context),
+                Type::getInt8PtrTy(context)
             );
             builder.CreateCall(counter_update_func, args);
 
@@ -447,7 +462,7 @@ void PathProfilingPass::instr_for_edges(Function *F, Module *M, Value *r_ptr, Va
     return;
 }
 
-void PathProfilingPass::instr_at_exit(Function* F, Module *M, Value* counter_ptr, Value* r_ptr, Node &entry_node, Node &exit_node) {
+void PathProfilingPass::instr_at_exit(Function* F, Module *M, Value* r_ptr, Value* counter_ptr, Node &entry_node, Node &exit_node) {
     // instrument before the terminator instruction of the exit basicblock
     auto &context = F -> getContext();
     PointerType* ptr_type_int8 = PointerType::get(Type::getInt8Ty(context), 0);
@@ -456,14 +471,14 @@ void PathProfilingPass::instr_at_exit(Function* F, Module *M, Value* counter_ptr
     std::vector<Value *> args;
     Value* counter_addr = builder.CreateLoad(ptr_type_int8, counter_ptr);
     Value* idx = builder.CreateLoad(Type::getInt32Ty(context), r_ptr);
-    args.push_back(counter_addr);
     args.push_back(idx);
+    args.push_back(counter_addr);
 
     auto counter_update_func = M -> getOrInsertFunction(
         "updateCounter",
         Type::getVoidTy(context),
-        Type::getInt8PtrTy(context),
-        Type::getInt32Ty(context)
+        Type::getInt32Ty(context),
+        Type::getInt8PtrTy(context)
     );
 
     builder.CreateCall(counter_update_func, args);
@@ -480,6 +495,24 @@ void PathProfilingPass::instrument(Function* F, Module* M, Nodes &nodes_vec, Edg
     instr_at_exit(F, M, ptr_pair.first, ptr_pair.second, entry_node, exit_node);
 }
 
+void verify_val_result(Edges edges_vec) {
+    for (auto edge : edges_vec) {
+        errs() << edge -> src ->getName() << " -> " << edge -> dst ->getName() << " : " << edge -> val << "\n";
+    }
+}
+
+void verify_spanning_tree(Edges spanning_tree_vec) {
+    for (auto edge : spanning_tree_vec) {
+        errs() << edge -> src ->getName() << " -> " << edge -> dst ->getName() << " : " << edge -> isInSpanningTree << "\n";
+    }
+}
+
+void verify_inc_result(Edges edges_vec) {
+    for (auto edge : edges_vec) {
+        errs() << edge -> src ->getName() << " -> " << edge -> dst ->getName() << " : " << edge -> inc << "\n";
+    }
+}
+
 void PathProfilingPass::processFunction(Function &F, Module &M) {
     // variables 
     Node entry_node, exit_node;
@@ -492,6 +525,7 @@ void PathProfilingPass::processFunction(Function &F, Module &M) {
     // initialize 
     errs() << "######### initialize ########## "  << "\n";
     init_nodes(F, nodes_vec);
+    if (nodes_vec.size() == 0) return;              // skip special functions, e.g. ios_base4Init
     init_edges(F, edges_vec);
     set_entry_and_exit_node(nodes_vec, edges_vec, entry_node, exit_node);
     
@@ -508,14 +542,17 @@ void PathProfilingPass::processFunction(Function &F, Module &M) {
     // calculate val for each edge
     errs() << "######### calculate val for each edge ########## "  << "\n";
     calculate_val_for_edges(nodes_vec, edges_vec, num_paths_map, entry_node, exit_node);
+    verify_val_result(edges_vec);
 
     // add exit -> entry edge and select a spanning tree
     errs() << "######### select_spanning_tree ########## "  << "\n";
     select_spanning_tree(nodes_vec, edges_vec, entry_node, exit_node, spanning_tree_vec);
+    verify_spanning_tree(spanning_tree_vec);
 
     // caluculate inc for each chord
     errs() << "######### calculate_inc_for_chords ########## "  << "\n";
     calculate_inc_for_chords(edges_vec, spanning_tree_vec);
+    verify_inc_result(edges_vec);
 
     // instrument part
     errs() << "######### instrument ########## "  << "\n";
@@ -532,6 +569,12 @@ void PathProfilingPass::processFunction(Function &F, Module &M) {
 bool PathProfilingPass::runOnModule(Module &M) {
     excluded_functions_set.insert("initCounter");
     excluded_functions_set.insert("updateCounter");
+    excluded_functions_set.insert("__cxx_global_var_init");
+    excluded_functions_set.insert("__cxa_atexit");
+    excluded_functions_set.insert("_GLOBAL__sub_I_basic.cpp");
+    excluded_functions_set.insert("_ZNSt8ios_base4InitD1Ev");
+    excluded_functions_set.insert("_ZNSt8ios_base4InitC1Ev");
+
     for (auto &F : M)
     {
         if (excluded_functions_set.find(F.getName()) != excluded_functions_set.end()) {

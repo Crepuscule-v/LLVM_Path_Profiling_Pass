@@ -2,7 +2,5 @@
 
 ## Usage
 ```
-cmake -B build
-cd build
-make
+./build.sh
 ```

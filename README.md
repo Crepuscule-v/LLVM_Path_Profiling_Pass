@@ -2,5 +2,6 @@
 
 ## Usage
 ```
-./build.sh
+./build_pass.sh
+./build_test.sh
 ```

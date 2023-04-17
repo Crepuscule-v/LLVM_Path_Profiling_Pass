@@ -286,7 +286,6 @@ void PathProfilingPass::calculate_inc_for_chords(Edges &edges_vec, Edges spannin
         undirected_spanning_tree_vec.push_back(reverse_edge);
         undirected_spanning_tree_vec.push_back(edge);
     }
-
     // calculate inc for each chord through dfs 
     for (auto &edge : edges_vec) {
         if (!edge -> isInSpanningTree) {
@@ -297,7 +296,6 @@ void PathProfilingPass::calculate_inc_for_chords(Edges &edges_vec, Edges spannin
             edge -> inc = inc + edge -> val;
         }
     }
-
     return;
 }
 

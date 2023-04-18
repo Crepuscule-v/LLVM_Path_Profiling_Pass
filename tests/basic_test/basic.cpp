@@ -1,3 +1,4 @@
+// passed
 #include <iostream>
 
 void exampleFunction(int input) {
@@ -14,7 +15,7 @@ void exampleFunction(int input) {
 
 int main() {
     std::cout<< "hello world" << std::endl;
+    exampleFunction(0);
     exampleFunction(1);
-    std::cout<< "hello world 1" << std::endl;
     return 0;
 }

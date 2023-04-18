@@ -36,5 +36,18 @@ extern "C" void* initCounter(int size, char *func_name) {
     return node;
 }
 
+extern "C" void print_result() {
+    auto p = start;
+    while (p) {
+        std::cout << "func_name " << p -> func_name << std::endl;
+        for (int i = 0; i < p -> path_num; i ++) {
+            std::cout << "path : " << i << "    times: " << p -> counter[i] << std::endl;
+        }
+        std::cout << std::endl;
+        p = p -> next;
+    }
+    return;
+}
+
 // TODO:
 void free_memory(){}

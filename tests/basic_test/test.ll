@@ -68,12 +68,33 @@ declare noundef nonnull align 8 dereferenceable(8) ptr @_ZSt4endlIcSt11char_trai
 ; Function Attrs: mustprogress noinline norecurse optnone uwtable
 define dso_local noundef i32 @main() #5 {
   %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
   store i32 0, ptr %1, align 4
-  %2 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.4)
-  %3 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %2, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
-  call void @_Z15exampleFunctioni(i32 noundef 1)
-  %4 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.5)
-  %5 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %4, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
+  %3 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.4)
+  %4 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %3, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
+  store i32 0, ptr %2, align 4
+  br label %5
+
+5:                                                ; preds = %11, %0
+  %6 = load i32, ptr %2, align 4
+  %7 = icmp slt i32 %6, 10
+  br i1 %7, label %8, label %14
+
+8:                                                ; preds = %5
+  %9 = load i32, ptr %2, align 4
+  %10 = srem i32 %9, 2
+  call void @_Z15exampleFunctioni(i32 noundef %10)
+  br label %11
+
+11:                                               ; preds = %8
+  %12 = load i32, ptr %2, align 4
+  %13 = add nsw i32 %12, 1
+  store i32 %13, ptr %2, align 4
+  br label %5, !llvm.loop !6
+
+14:                                               ; preds = %5
+  %15 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.5)
+  %16 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %15, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
   ret i32 0
 }
 
@@ -99,3 +120,5 @@ attributes #5 = { mustprogress noinline norecurse optnone uwtable "frame-pointer
 !3 = !{i32 7, !"uwtable", i32 2}
 !4 = !{i32 7, !"frame-pointer", i32 2}
 !5 = !{!"Ubuntu clang version 15.0.7"}
+!6 = distinct !{!6, !7}
+!7 = !{!"llvm.loop.mustprogress"}

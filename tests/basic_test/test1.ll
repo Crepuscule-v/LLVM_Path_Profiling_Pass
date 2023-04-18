@@ -108,20 +108,42 @@ block_judge:
 
 main_block_1:                                     ; preds = %block_init, %block_judge
   %5 = alloca i32, align 4
+  %6 = alloca i32, align 4
   store i32 0, ptr %5, align 4
-  %6 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.4)
-  %7 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %6, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
-  call void @_Z15exampleFunctioni(i32 noundef 1)
-  %8 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.5)
-  %9 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %8, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
-  %10 = load ptr, ptr @_main_counter_array, align 8
-  %11 = load i32, ptr %r_ptr, align 4
-  call void @updateCounter(i32 %11, ptr %10)
+  %7 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.4)
+  %8 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %7, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
+  store i32 0, ptr %6, align 4
+  br label %main_block_2
+
+main_block_2:                                     ; preds = %main_block_4, %main_block_1
+  %9 = load i32, ptr %6, align 4
+  %10 = icmp slt i32 %9, 10
+  br i1 %10, label %main_block_3, label %main_block_5
+
+main_block_3:                                     ; preds = %main_block_2
+  %11 = load i32, ptr %6, align 4
+  %12 = srem i32 %11, 2
+  call void @_Z15exampleFunctioni(i32 noundef %12)
+  br label %main_block_4
+
+main_block_4:                                     ; preds = %main_block_3
+  %13 = load i32, ptr %6, align 4
+  %14 = add nsw i32 %13, 1
+  store i32 %14, ptr %6, align 4
+  br label %main_block_2, !llvm.loop !6
+
+main_block_5:                                     ; preds = %main_block_2
+  %15 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(ptr noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, ptr noundef @.str.5)
+  %16 = call noundef nonnull align 8 dereferenceable(8) ptr @_ZNSolsEPFRSoS_E(ptr noundef nonnull align 8 dereferenceable(8) %15, ptr noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)
+  %17 = load ptr, ptr @_main_counter_array, align 8
+  %18 = load i32, ptr %r_ptr, align 4
+  call void @updateCounter(i32 %18, ptr %17)
+  call void @print_result()
   ret i32 0
 
 block_init:                                       ; preds = %block_judge
-  %12 = call ptr @initCounter(i32 1, ptr @1)
-  store ptr %12, ptr @_main_counter_array, align 8
+  %19 = call ptr @initCounter(i32 0, ptr @1)
+  store ptr %19, ptr @_main_counter_array, align 8
   br label %main_block_1
 }
 
@@ -134,6 +156,8 @@ define internal void @_GLOBAL__sub_I_basic.cpp() #0 section ".text.startup" {
 declare ptr @initCounter(i32, ptr)
 
 declare void @updateCounter(i32, ptr)
+
+declare void @print_result()
 
 attributes #0 = { noinline uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
 attributes #1 = { "frame-pointer"="all" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
@@ -151,3 +175,5 @@ attributes #5 = { mustprogress noinline norecurse optnone uwtable "frame-pointer
 !3 = !{i32 7, !"uwtable", i32 2}
 !4 = !{i32 7, !"frame-pointer", i32 2}
 !5 = !{!"Ubuntu clang version 15.0.7"}
+!6 = distinct !{!6, !7}
+!7 = !{!"llvm.loop.mustprogress"}

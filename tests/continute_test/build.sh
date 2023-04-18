@@ -1,8 +1,8 @@
 # compile test with our pass 
 CLANG=clang++-15
 OPT=opt-15
-TEST_FILE_PATH=basic_test
-TEST_FILE=basic.cpp             # modify it to switch test file
+TEST_FILE_PATH=continute_test
+TEST_FILE=continute_test.cpp             # modify it to switch test file
 
 $CLANG -emit-llvm -S $TEST_FILE -o test.ll
 $OPT -dot-cfg -enable-new-pm=0 -disable-output test.ll        # get cfg for each function

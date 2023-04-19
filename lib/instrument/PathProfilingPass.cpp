@@ -27,10 +27,11 @@ typedef struct Edge {
     bool isSelfLoop;
     bool isDummyedge;
     bool isExitToEntry;
+    BasicBlock* another_node_in_backedge;   // record this node when curr edge is a dummyEdge
 
     Edge(BasicBlock* src, BasicBlock* dst) 
         : src(src), dst(dst), val(0), inc(0), isInSpanningTree(false), 
-          isBackedge(false), isSelfLoop(false), isDummyedge(false), isExitToEntry(false) {}
+          isBackedge(false), isSelfLoop(false), isDummyedge(false), isExitToEntry(false), another_node_in_backedge(nullptr){}
 } Edge;
 
 typedef BasicBlock* Node;
@@ -47,7 +48,7 @@ class PathProfilingPass : public ModulePass {
         PathProfilingPass() : ModulePass(ID) {}
 
         bool runOnModule(Module &);
-        std::pair<Edges, std::pair<Node, Node>> processFunction(Function &, Module &);
+        Edges processFunction(Function &, Module &);
         void init_nodes(Function &, Nodes &);
         void init_edges(Function &, Edges &);
         void set_entry_and_exit_node(Nodes &, Edges &, Node &, Node &);
@@ -68,13 +69,14 @@ class PathProfilingPass : public ModulePass {
         std::pair<Value*, Value*> instr_before_entry(Function*, Module*, BasicBlock*, int);
         void update_decode_map(std::string, Edges, Node, Node, std::unordered_map<std::string, std::unordered_map<int, std::string>> &);
         void dfs_to_decode(Edges, std::set<Node>, Node, std::unordered_map<int, std::string> &, int , std::string, Edges, Node);
+        void generate_dot_graph(Function *, Edges);
 };
 
 void PathProfilingPass::init_nodes(Function &F, Nodes &nodes_vec) {
     int idx = 0;
     for (auto &BB : F) {
         nodes_vec.push_back(&BB);
-        std::string name = F.getName().str() + "_block_" + std::to_string(++ idx);       
+        std::string name = "block_" + std::to_string(++ idx);       
         errs() << name << "\n";
         BB.setName(name);           // just for debugging
     }
@@ -163,7 +165,9 @@ void PathProfilingPass::update_edges_vec_with_backedge_info(Edges &edges_vec, st
 
             // add dummy edges
             Edge* dummy_entry_to_backedge = createEdge(entry_node, dst);
+            dummy_entry_to_backedge -> another_node_in_backedge = src;
             Edge* dummy_backedge_to_exit = createEdge(src, exit_node);
+            dummy_backedge_to_exit -> another_node_in_backedge = dst;
             dummy_entry_to_backedge -> isDummyedge = true;
             dummy_backedge_to_exit -> isDummyedge = true;
             edges_vec.push_back(dummy_entry_to_backedge);
@@ -553,7 +557,7 @@ void verify_updated_edges(Edges edges_vec) {
     return;
 }
 
-std::pair<Edges, std::pair<Node, Node>> PathProfilingPass::processFunction(Function &F, Module &M) {
+Edges PathProfilingPass::processFunction(Function &F, Module &M) {
     // variables 
     Node entry_node, exit_node;
     Edges edges_vec;
@@ -603,78 +607,10 @@ std::pair<Edges, std::pair<Node, Node>> PathProfilingPass::processFunction(Funct
     // print path statistical results before return
     if (F.getName() == "main") print_result(&F, &M);
 
-    return {edges_vec, {entry_node, exit_node}};
-}
-
-int find_inc_for_dummy_edge(Edges edges_vec, Node src, Node dst) {
-    for (auto edge : edges_vec) {
-        if (edge -> src == src && edge -> dst == dst && edge -> isDummyedge) {
-            errs() << edge -> src -> getName() << "  " << edge -> dst -> getName() << " "  << edge -> inc << "  \n";
-            return edge -> inc;
-        }
-    }
-    return 0;
-}
-
-void PathProfilingPass::dfs_to_decode(Edges edges_vec, std::set<Node> exit_node_set, Node curr_node, std::unordered_map<int, std::string> &tmp_map, int cur_path_sum, std::string curr_path, Edges all_edges_vec, Node exit_node) {
-    curr_path += curr_node -> getName().str() + "  ";
-    if (exit_node_set.find(curr_node) != exit_node_set.end()) {
-        if (curr_node != exit_node) {
-            cur_path_sum += find_inc_for_dummy_edge(all_edges_vec, curr_node, exit_node);
-        }
-        tmp_map[cur_path_sum] = curr_path; 
-        
-        errs() << "curr node " << curr_node -> getName() << "  " << cur_path_sum << "  " << "\n";
-        return;
-    }
-    auto out_edges = get_out_edges_vec(curr_node, edges_vec);
-    for (auto edge : out_edges) {
-        auto dst = edge -> dst;
-        cur_path_sum += edge -> inc;
-        dfs_to_decode(edges_vec, exit_node_set, dst, tmp_map, cur_path_sum, curr_path, all_edges_vec, exit_node);
-        cur_path_sum -= edge -> inc;
-    }
-    return;
-}
-
-void PathProfilingPass::update_decode_map(std::string func_name, Edges edges_vec, Node entry_node, Node exit_node, std::unordered_map<std::string, std::unordered_map<int, std::string>> &decode_map) {
-    std::unordered_map<int, std::string> tmp_map;
-    std::set<Node> exit_node_set;                // terminal nodes set
-    std::unordered_map<Node, int> backedge_dst_map;
-    Edges new_edges_vec;                
-
-    for (auto edge : edges_vec) {
-        if (!edge -> isBackedge && !edge -> isExitToEntry && !edge -> isDummyedge) {
-            new_edges_vec.push_back(edge);
-        }
-        if (edge -> isBackedge && exit_node_set.find(edge -> src) == exit_node_set.end()) {
-            errs() << "add exit node :" << edge -> src -> getName() << "\n";
-            exit_node_set.insert(edge -> src);
-        }
-        if (edge -> isBackedge && backedge_dst_map.find(edge -> dst) == backedge_dst_map.end()) {
-            int inc = find_inc_for_dummy_edge(edges_vec, entry_node, edge -> dst);
-            backedge_dst_map[edge -> dst] = inc;
-        }
-    }
-    exit_node_set.insert(exit_node);
-    // entry_node
-    errs() << "--- entry_node :" << entry_node -> getName() << "\n";
-    errs() << "dfs_to_decode : " << "\n";
-    dfs_to_decode(new_edges_vec, exit_node_set, entry_node, tmp_map, 0, "", edges_vec, exit_node);
-    // backedge.dst | need to add inc beforehand
-    for (auto &item : backedge_dst_map) {
-        dfs_to_decode(new_edges_vec, exit_node_set, item.first, tmp_map, item.second, "", edges_vec, exit_node);
-    }
-    decode_map[func_name] = tmp_map;
-
-    errs() << "sum to path : " << " \n";
-    for (auto &item : tmp_map) {
-        errs() << item.first << "  " << item.second << "\n";
-    }
+    return edges_vec;
 }
 
 std::set<std::string> excluded_function_set {
-    "_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_",
     "initCounter",
     "updateCounter",
     "print_result",
@@ -684,24 +620,84 @@ std::set<std::string> excluded_function_set {
     "_ZNSt8ios_base4InitD1Ev",
     "_ZNSt8ios_base4InitC1Ev",
     "_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc",
+    "_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_",
     "_ZNSolsEPFRSoS_E"
 };
 
+std::string FUNCTION_DAG_GRAPH_DIR_NAME = "function_dag_graph_dir";
+
+void PathProfilingPass::generate_dot_graph(Function *F, Edges edges_vec) {
+    std::error_code errorCode;
+    std::string func_name = F -> getName().str();
+    std::string filename = FUNCTION_DAG_GRAPH_DIR_NAME + "/" + "dagGraph." + func_name + ".dot";
+
+    raw_fd_ostream dotFile(filename.c_str(), errorCode);
+    if (errorCode) {
+        errs() << "Open " << filename << "failed \n";
+        return;
+    }
+    dotFile << "digraph " << func_name << "\{ \n";
+    dotFile << "label=\"Graph for" << func_name << "\"\n";
+    for (auto edge : edges_vec) {
+        auto src = edge -> src;
+        auto dst = edge -> dst;
+        dotFile << "\t\"" << src -> getName().str() << "\" -> " << " \"" << dst -> getName().str() << "\"\n\t";
+        int inc = edge -> inc;
+        if (edge -> isBackedge) {
+            dotFile << "[color=darkslategray1][edge_type=back_edge][inc=" << 0 << "]" << "\n"; 
+        }
+        else if (edge -> isExitToEntry) {
+            dotFile << "[color=chartreuse1][edge_type=exit_to_entry][inc=" << 0 << "]" << "\n";
+        }
+        else if (edge -> isDummyedge) {
+            if (edge -> inc != 0) {
+                dotFile << "[label=" << inc << "]" << "[color=deeppink][edge_type=dummy_edge][inc=" << inc << "]"; 
+            }
+            else dotFile << "[color=deeppink][edge_type=dummy_edge][inc=" << 0 << "]"; 
+            dotFile << "[another_node_in_backedge=" << edge -> another_node_in_backedge -> getName().str() << "]" << "\n";
+        }
+        else {
+            if (edge -> inc != 0) {
+                dotFile << "[label=" << inc << "]" << "[color=black][edge_type=normal_edge][inc=" << inc << "]" << "\n"; 
+            }
+            else dotFile << "[color=black][edge_type=normal_edge][inc=" << 0 << "]" << "\n"; 
+        }
+    }
+    dotFile << "}\n";
+    return;
+}
+
+void write_func_name_set_to_file(std::set<std::string> func_name_set) {
+    std::error_code errorCode;
+    std::string filename = FUNCTION_DAG_GRAPH_DIR_NAME + "/" + "func_name_list.txt";
+
+    raw_fd_ostream funcnameFile(filename.c_str(), errorCode);
+    if (errorCode) {
+        errs() << "Open " << filename << "failed \n";
+        return;
+    }
+    
+    for (auto iter = func_name_set.begin(); iter != func_name_set.end(); iter ++) {
+        funcnameFile << *iter << "\n";
+    }
+    return;
+}
+
 bool PathProfilingPass::runOnModule(Module &M) {
     std::unordered_map<std::string, std::unordered_map<int, std::string>> decode_map;   // {"func" : {"path_sum" : "path"}}
-
+    std::set<std::string> func_name_set;
     for (auto &F : M)
     {
         if (excluded_function_set.find(F.getName().str()) != excluded_function_set.end()) {
             errs() << "skip function  " << F.getName() << "\n";
             continue;
         }
+        func_name_set.insert(F.getName().str());
         errs() << "Function " << F.getName() << "\n";
-        auto _info = processFunction(F, M);
-        auto edges_vec = _info.first;
-        auto entry_node = _info.second.first;
-        auto exit_node = _info.second.second;
-        update_decode_map(F.getName().str(), edges_vec, entry_node, exit_node, decode_map);
+        Edges edges_vec = processFunction(F, M);
+        generate_dot_graph(&F, edges_vec);
+        write_func_name_set_to_file(func_name_set);
+        Node entry_node, exit_node;
         errs() << "----------\n\n" << "\n";
     }
 
@@ -716,7 +712,6 @@ bool PathProfilingPass::runOnModule(Module &M) {
         errs() << "Error opening output file: " << EC.message() << "\n";
     }
     */
-
     return true;
 }
 

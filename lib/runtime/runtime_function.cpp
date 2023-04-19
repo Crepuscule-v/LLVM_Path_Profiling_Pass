@@ -44,10 +44,10 @@ extern "C" void print_result() {
             std::cout << "path : " << i << "    times: " << p -> counter[i] << std::endl;
         }
         std::cout << std::endl;
+        auto tmp_ptr = p;
         p = p -> next;
+        delete [] tmp_ptr -> counter;
+        delete tmp_ptr;
     }
     return;
 }
-
-// TODO:
-void free_memory(){}

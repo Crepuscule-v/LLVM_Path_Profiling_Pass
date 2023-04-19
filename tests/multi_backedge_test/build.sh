@@ -1,11 +1,14 @@
 # compile test with our pass 
 CLANG=clang++-15
 OPT=opt-15
-TEST_FILE_PATH=self_cycle_test
-TEST_FILE=self_cycle_test.cpp             # modify it to switch test file
+TEST_FILE_PATH=multi_backedge_test
+TEST_FILE=multi_backedge_test.cpp             # modify it to switch test file
+
+FUNCTION_DAG_GRAPH_DIR_NAME=function_dag_graph_dir
+mkdir $FUNCTION_DAG_GRAPH_DIR_NAME
 
 $CLANG -emit-llvm -S $TEST_FILE -o test.ll
-$OPT -dot-cfg -enable-new-pm=0 -disable-output test.ll        # get cfg for each function
+# $OPT -dot-cfg -enable-new-pm=0 -disable-output test.ll        # get cfg for each function
 
 $OPT -load ../../build/lib/instrument/libpathProfilePass.so -S --pathProfile -enable-new-pm=0 test.ll -o test1.ll
 

@@ -7,7 +7,8 @@ import json
 
 func_list = []
 sum_to_path_map = {}
-path_prefix = "function_dag_graph_dir/"
+path_prefix = "tests/multi_backedge_test/function_dag_graph_dir/"           # modify it to the path of your .dot file 
+
 def demangle_cpp_func(funcname: str) -> str:
     try:
         demangled: str = cxxfilt.demangle(funcname)

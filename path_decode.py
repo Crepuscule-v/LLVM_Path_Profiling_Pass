@@ -28,7 +28,6 @@ def process_dot(file_name : str, func_name : str):
     return process(nx_graph, func_name)
 
 def dfs(curr_node : str, curr_path : List, path_sum : int, edge_map : Dict, node_map : Dict, ed_node_list : List, exit_node : str, tmp_sum_to_path_map : Dict):
-    print(curr_node)
     if curr_node in ed_node_list:
         if curr_node != exit_node:
             path_sum += edge_map[str((curr_node, exit_node))][0]["inc"]

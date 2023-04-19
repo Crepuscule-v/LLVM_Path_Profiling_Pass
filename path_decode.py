@@ -32,8 +32,7 @@ def dfs(curr_node : str, curr_path : List, path_sum : int, edge_map : Dict, node
     if curr_node in ed_node_list:
         if curr_node != exit_node:
             path_sum += edge_map[str((curr_node, exit_node))][0]["inc"]
-        # we need to copy to get a new list, just a feature python-like language
-        tmp_sum_to_path_map[path_sum] = curr_path.copy()
+        tmp_sum_to_path_map[path_sum] = curr_path.copy()                    # We need to copy it to a new list (just a feature for python-like language)
         return
 
     for node in node_map[curr_node]:
@@ -47,7 +46,7 @@ def dfs(curr_node : str, curr_path : List, path_sum : int, edge_map : Dict, node
     return
 
 def process(nx_graph, func_name):
-    edge_map = {}                   # 有重边，所以应该 key (src,dst) 对应的边应该用列表来存
+    edge_map = {}                                           # Note that there may be multiple edges between two points, so we use list to store the edge inside the map
     node_map = {}               
     entry_node = ""
     exit_node = ""
@@ -57,7 +56,7 @@ def process(nx_graph, func_name):
         if src not in node_map:
             node_map[src] = []
         node_map[src].append(dst)
-        idx = str((src, dst))                       # as key of edge_map
+        idx = str((src, dst))                               # as key of edge_map
         new_edge = {}
         for key in attrs:
             if key == "edge_type":

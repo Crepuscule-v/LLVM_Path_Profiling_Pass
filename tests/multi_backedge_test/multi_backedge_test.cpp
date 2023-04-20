@@ -1,4 +1,8 @@
 // Passed
+#include <random>
+#include <iostream>
+#include <unistd.h>
+
 int somefunc(int x) {
     int i = 0;
     int j = 0;
@@ -18,6 +22,10 @@ int main() {
     c+= somefunc(-10);
     c+= somefunc(0);
     c+= somefunc(4);
+    while (true) {
+        int x = rand() % 20 - 10;
+        somefunc(x);
+    }
     return c;
 }
 /*

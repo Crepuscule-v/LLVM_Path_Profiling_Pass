@@ -23,6 +23,8 @@
   ./build.sh
   ```
 
+  > `path_profile.profraw` will be generated if you enable continuous_mode, use `parser_data.py` to analyze it.
+
 
 
 ### Decode Path

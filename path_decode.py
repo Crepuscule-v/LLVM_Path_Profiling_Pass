@@ -33,7 +33,7 @@ def dfs(curr_node : str, curr_path : List, path_sum : int, edge_map : Dict, node
             path_sum += edge_map[str((curr_node, exit_node))][0]["inc"]
         tmp_sum_to_path_map[path_sum] = curr_path.copy()                    # We need to copy it to a new list (just a feature for python-like language)
         return
-
+    
     for node in node_map[curr_node]:
         for edge in edge_map[str((curr_node, node))]:
             if edge["edge_type"] == "normal_edge":
@@ -77,7 +77,8 @@ def process(nx_graph, func_name):
 
     for key in node_map:
         node_map[key] = list(set(node_map[key]))            # remove duplication nodes
-
+    
+    
     tmp_sum_to_path_map = {}
     # start node is entry_node 
     dfs(entry_node, [entry_node], 0, edge_map, node_map, ed_node_list, exit_node, tmp_sum_to_path_map)
@@ -106,6 +107,7 @@ def decode():
     read_func_name()
     for item in func_list:
         graph_file_name = "dagGraph." + item + ".dot"
+        print(graph_file_name)
         process_dot(graph_file_name, item)
     
     json_str = json.dumps(sum_to_path_map)

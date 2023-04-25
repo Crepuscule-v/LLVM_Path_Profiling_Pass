@@ -9,7 +9,9 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/Support/FileSystem.h"
 #include <vector>
 #include <unordered_map>
 #include <queue>
@@ -48,7 +50,7 @@ class PathProfilingPass : public ModulePass {
         PathProfilingPass() : ModulePass(ID) {}
 
         bool runOnModule(Module &);
-        Edges processFunction(Function &, Module &);
+        std::pair<Edges, Nodes> processFunction(Function &, Module &);
         void init_nodes(Function &, Nodes &);
         void init_edges(Function &, Edges &);
         void set_entry_and_exit_node(Nodes &, Edges &, Node &, Node &);
@@ -69,18 +71,19 @@ class PathProfilingPass : public ModulePass {
         std::pair<Value*, Value*> instr_before_entry(Function*, Module*, BasicBlock*, int);
         void update_decode_map(std::string, Edges, Node, Node, std::unordered_map<std::string, std::unordered_map<int, std::string>> &);
         void dfs_to_decode(Edges, std::set<Node>, Node, std::unordered_map<int, std::string> &, int , std::string, Edges, Node);
-        void generate_dot_graph(Function *, Edges);
+        void generate_dot_graph(Function *, Edges, Nodes);
 };
 
 void PathProfilingPass::init_nodes(Function &F, Nodes &nodes_vec) {
     int idx = 0;
     for (auto &BB : F) {
         nodes_vec.push_back(&BB);
+        // errs() << "Basic Block" << "\n";
         std::string name = "block_" + std::to_string(++ idx);       
-        errs() << name << "\n";
+        // errs() << name << "\n";
         BB.setName(name);           // just for debugging
     }
-    errs() << "basic block num :" << nodes_vec.size() << "\n";
+    // errs() << "basic block num :" << nodes_vec.size() << "\n";
     return;
 }
 
@@ -121,6 +124,7 @@ void PathProfilingPass::set_entry_and_exit_node(Nodes &nodes_vec, Edges &edges_v
             exit_node = bb;
         }
     }
+    // errs() << entry_cnt << "  " << exit_cnt << "\n";
     if (entry_cnt != 1 || exit_cnt != 1) {
         throw "Invalid CFG";
     }
@@ -201,7 +205,7 @@ Nodes PathProfilingPass::topological_sort(Edges edges_vec, Nodes &nodes_vec, Nod
     }
 
     for (int i = 0; i < sorted_nodes_vec.size(); i ++) {
-        errs() << sorted_nodes_vec[i] -> getName() << " indegree  " << in_degree_map[sorted_nodes_vec[i]] << "\n";
+        // errs() << sorted_nodes_vec[i] -> getName() << " indegree  " << in_degree_map[sorted_nodes_vec[i]] << "\n";
     }
 
     return sorted_nodes_vec;
@@ -215,10 +219,10 @@ void PathProfilingPass::calculate_val_for_edges(Nodes &nodes_vec, Edges &edges_v
     for (auto edge : edges_vec) {
         if (edge -> isBackedge == false) tmp_edges_vec.push_back(edge);
     }
-    errs() << "sorted_nodes_vec.size() : " << sorted_nodes_vec.size() << "\n";
+    // errs() << "sorted_nodes_vec.size() : " << sorted_nodes_vec.size() << "\n";
     for (int i = sorted_nodes_vec.size() - 1; i >= 0; i --) {
         auto curr_node = sorted_nodes_vec[i];
-        errs() << i << " : curr node " << curr_node -> getName() << "  exit node " << exit_node -> getName() << "\n";
+        // errs() << i << " : curr node " << curr_node -> getName() << "  exit node " << exit_node -> getName() << "\n";
         if (curr_node == exit_node) num_paths_map[curr_node] = 1;           // leaf node
         else {
             num_paths_map[curr_node] = 0;
@@ -239,7 +243,7 @@ Node PathProfilingPass::find_ufs(Node node, std::unordered_map<Node, Node> fathe
 void PathProfilingPass::select_spanning_tree(Nodes &nodes_vec, Edges &edges_vec, Node &entry_node, Node &exit_node, Edges &spanning_tree_vec) {
     // add exit -> entry edge
     auto exit_to_entry_edge = createEdge(exit_node, entry_node);
-    errs() << "exit_node " << exit_node -> getName() << " entry_node " << entry_node -> getName() << "\n";
+    // errs() << "exit_node " << exit_node -> getName() << " entry_node " << entry_node -> getName() << "\n";
     exit_to_entry_edge -> isExitToEntry = true;
     exit_to_entry_edge -> isInSpanningTree = true;
     edges_vec.push_back(exit_to_entry_edge);
@@ -260,7 +264,7 @@ void PathProfilingPass::select_spanning_tree(Nodes &nodes_vec, Edges &edges_vec,
             if (src_father == dst_father)  continue;        // skip the edge, otherwise will form a ring
             edge -> isInSpanningTree = true;
             spanning_tree_vec.push_back(edge);
-            errs() << "src node : " << src -> getName() << " dst node : " << dst -> getName() << "\n";
+            // errs() << "src node : " << src -> getName() << " dst node : " << dst -> getName() << "\n";
             father[src_father] = dst_father;                // combine the tree
         }
         if (spanning_tree_vec.size() == nodes_vec.size() - 1) break;
@@ -305,7 +309,7 @@ void PathProfilingPass::calculate_inc_for_chords(Edges &edges_vec, Edges spannin
     // calculate inc for each chord through dfs 
     for (auto &edge : edges_vec) {
         if (!edge -> isInSpanningTree && !edge -> isBackedge) {
-            errs() << " cal inc for " << edge -> src -> getName() << "  " << edge -> dst -> getName() << "  " << "\n";
+            // errs() << " cal inc for " << edge -> src -> getName() << "  " << edge -> dst -> getName() << "  " << "\n";
             auto src = edge -> src;
             auto dst = edge -> dst;
             int inc = 0;
@@ -557,7 +561,7 @@ void verify_updated_edges(Edges edges_vec) {
     return;
 }
 
-Edges PathProfilingPass::processFunction(Function &F, Module &M) {
+std::pair<Edges, Nodes> PathProfilingPass::processFunction(Function &F, Module &M) {
     // variables 
     Node entry_node, exit_node;
     Edges edges_vec;
@@ -567,47 +571,47 @@ Edges PathProfilingPass::processFunction(Function &F, Module &M) {
     Edges spanning_tree_vec;
 
     // initialize 
-    errs() << "######### initialize ########## "  << "\n";
+    // errs() << "######### initialize ########## "  << "\n";
     init_nodes(F, nodes_vec);
     if (nodes_vec.size() == 0) return {};               // skip special functions, e.g. ios_base4Init
     init_edges(F, edges_vec);
     set_entry_and_exit_node(nodes_vec, edges_vec, entry_node, exit_node);
     
     // find backedges
-    errs() << "######### find backedges ########## "  << "\n";
+    // errs() << "######### find backedges ########## "  << "\n";
     std::unordered_map<Node, int> record;
     for (auto node : nodes_vec) record[node] = -1;
     find_backedges(entry_node, nodes_vec, edges_vec, record, backedges_map);
-    verify_backedge(backedges_map);
+    // verify_backedge(backedges_map);
 
     // update edges_vec with backedge info to generate a DAG graph
-    errs() << "######### update_edges_vec_with_backedge_info ########## "  << "\n";
+    // errs() << "######### update_edges_vec_with_backedge_info ########## "  << "\n";
     update_edges_vec_with_backedge_info(edges_vec, backedges_map, entry_node, exit_node);
-    verify_updated_edges(edges_vec);
+    // verify_updated_edges(edges_vec);
 
     // calculate val for each edge
-    errs() << "######### calculate val for each edge ########## "  << "\n";
+    // errs() << "######### calculate val for each edge ########## "  << "\n";
     calculate_val_for_edges(nodes_vec, edges_vec, num_paths_map, entry_node, exit_node);
-    verify_val_result(edges_vec);
+    // verify_val_result(edges_vec);
 
     // add exit -> entry edge and select a spanning tree
-    errs() << "######### select_spanning_tree ########## "  << "\n";
+    // errs() << "######### select_spanning_tree ########## "  << "\n";
     select_spanning_tree(nodes_vec, edges_vec, entry_node, exit_node, spanning_tree_vec);
-    verify_spanning_tree(spanning_tree_vec);
+    // verify_spanning_tree(spanning_tree_vec);
 
     // caluculate inc for each chord
-    errs() << "######### calculate_inc_for_chords ########## "  << "\n";
+    // errs() << "######### calculate_inc_for_chords ########## "  << "\n";
     calculate_inc_for_chords(edges_vec, spanning_tree_vec);
-    verify_inc_result(edges_vec);
+    // verify_inc_result(edges_vec);
 
     // instrument part
-    errs() << "######### instrument ########## "  << "\n";
+    // errs() << "######### instrument ########## "  << "\n";
     instrument(&F, &M, nodes_vec, edges_vec, entry_node, exit_node, num_paths_map[entry_node]);
     
     // print path statistical results before return
     if (F.getName() == "main") print_result(&F, &M);
 
-    return edges_vec;
+    return {edges_vec, nodes_vec};
 }
 
 std::set<std::string> excluded_function_set {
@@ -626,7 +630,20 @@ std::set<std::string> excluded_function_set {
 
 std::string FUNCTION_DAG_GRAPH_DIR_NAME = "function_dag_graph_dir";
 
-void PathProfilingPass::generate_dot_graph(Function *F, Edges edges_vec) {
+std::string basicblockToString(BasicBlock *BB) {
+    std::string str;
+    raw_string_ostream rso(str);
+    rso << BB->getName() << ":\\l";
+    for (auto &I : *BB) {
+        rso << " ";
+        I.print(rso);
+        rso << "\\l";                           // use \t instead of \n for .dot file 
+    }
+    rso.flush();
+    return str;
+}
+
+void PathProfilingPass::generate_dot_graph(Function *F, Edges edges_vec, Nodes nodes_vec) {
     std::error_code errorCode;
     std::string func_name = F -> getName().str();
     std::string filename = FUNCTION_DAG_GRAPH_DIR_NAME + "/" + "dagGraph." + func_name + ".dot";
@@ -638,11 +655,17 @@ void PathProfilingPass::generate_dot_graph(Function *F, Edges edges_vec) {
     }
     dotFile << "digraph " << func_name << "\{ \n";
     dotFile << "label=\"Graph for" << func_name << "\"\n";
+
+    for (auto node : nodes_vec) {
+        std::string str = basicblockToString(node);
+        dotFile << "\t\"" << node -> getName().str() << "\" " << "[shape=record, label=\"" << str << "\"]\n";
+    }
+    
     for (auto edge : edges_vec) {
         auto src = edge -> src;
         auto dst = edge -> dst;
         dotFile << "\t\"" << src -> getName().str() << "\" -> " << " \"" << dst -> getName().str() << "\"\n\t";
-        int inc = edge -> inc;
+        int inc = edge -> inc; 
         if (edge -> isBackedge) {
             dotFile << "[color=darkslategray1][edge_type=back_edge][inc=" << 0 << "]" << "\n"; 
         }
@@ -671,7 +694,7 @@ void write_func_name_set_to_file(std::set<std::string> func_name_set) {
     std::error_code errorCode;
     std::string filename = FUNCTION_DAG_GRAPH_DIR_NAME + "/" + "func_name_list.txt";
 
-    raw_fd_ostream funcnameFile(filename.c_str(), errorCode);
+    raw_fd_ostream funcnameFile(filename.c_str(), errorCode, llvm::sys::fs::OF_Append);     // when the project contains multiple source files
     if (errorCode) {
         errs() << "Open " << filename << "failed \n";
         return;
@@ -679,6 +702,7 @@ void write_func_name_set_to_file(std::set<std::string> func_name_set) {
     
     for (auto iter = func_name_set.begin(); iter != func_name_set.end(); iter ++) {
         funcnameFile << *iter << "\n";
+        errs() << *iter << "\n";
     }
     return;
 }
@@ -693,13 +717,15 @@ bool PathProfilingPass::runOnModule(Module &M) {
             continue;
         }
         func_name_set.insert(F.getName().str());
-        errs() << "Function " << F.getName() << "\n";
-        Edges edges_vec = processFunction(F, M);
-        generate_dot_graph(&F, edges_vec);
-        write_func_name_set_to_file(func_name_set);
+        // errs() << "Function " << F.getName() << "\n";
+        auto func_pair = processFunction(F, M);
+        Edges edges_vec = func_pair.first;
+        Nodes nodes_vec = func_pair.second;
+        generate_dot_graph(&F, edges_vec, nodes_vec);
         Node entry_node, exit_node;
-        errs() << "----------\n\n" << "\n";
+        // errs() << "----------\n\n" << "\n";
     }
+    write_func_name_set_to_file(func_name_set);
 
     // Save the instrumented IR to a file before verification, just for debugging
     /*

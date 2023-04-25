@@ -26,10 +26,10 @@ extern "C" void updateCounter(int idx, func_node *node) {
 
 extern "C" void* initCounter(int size, char *func_name) {
     if (!continuous_mode) {    
-        std::cout << size << "  " << func_name << std::endl;
+        // std::cout << size << "  " << func_name << std::endl;
         func_node* new_node = new func_node;
         __uint64_t* counter = new __uint64_t [size] ();                 // initialize with 0
-        std::cout << "malloc finished " << std::endl;
+        // std::cout << "malloc finished " << std::endl;
 
         new_node -> counter = counter;
         new_node -> counter_size = size;
@@ -54,10 +54,10 @@ extern "C" void* initCounter(int size, char *func_name) {
 
         // update file_offset
         size_t str_length = strlen(func_name) + 1;
-        std::cout << "size : " <<  sizeof(func_node) + size * sizeof(__uint64_t) + str_length << std::endl;
+        // std::cout << "size : " <<  sizeof(func_node) + size * sizeof(__uint64_t) + str_length << std::endl;
         file_offset += sizeof(func_node) + str_length + size * sizeof(__uint64_t);
         int fd = fileno(fp);
-        std::cout << "func_name : " << func_name << "  size : " << size << "  file_offset : " << file_offset << std::endl;
+        // std::cout << "func_name : " << func_name << "  size : " << size << "  file_offset : " << file_offset << std::endl;
         // update file length 
         if (ftruncate(fd, file_offset) == -1) {
             fclose(fp);
